@@ -141,6 +141,7 @@ class SoleTraderApp {
     constructor() {
         this.store = new DataStore();
         this.currentPeriod = 'week';
+        this.charts = {};
         this.initializeApp();
     }
 
@@ -152,6 +153,7 @@ class SoleTraderApp {
         this.setupAutoCalculations();
         this.renderAll();
         this.setDefaultDates();
+        this.initializeCharts();
     }
 
     setDefaultDates() {
@@ -306,6 +308,72 @@ class SoleTraderApp {
         this.renderIncome();
         this.renderPeriodStats();
         this.renderTaxCalculator();
+        this.updateWeeklyChart();
+    }
+
+    initializeCharts() {
+        // Initialize weekly trend chart
+        const ctx = document.getElementById('weeklyChart');
+        if (ctx) {
+            this.charts.weekly = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Net Profit',
+                        data: [],
+                        borderColor: '#4F46E5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: (value) => '£' + value
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    updateWeeklyChart() {
+        if (!this.charts.weekly) return;
+
+        // Get last 7 days
+        const days = [];
+        const profits = [];
+        
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            
+            const dayIncome = this.store.data.income
+                .filter(item => item.date === dateStr)
+                .reduce((sum, item) => sum + item.amount, 0);
+            
+            const dayExpenses = this.store.data.expenses
+                .filter(item => item.date === dateStr)
+                .reduce((sum, item) => sum + item.amount, 0);
+            
+            days.push(date.toLocaleDateString('en-GB', { weekday: 'short' }));
+            profits.push(dayIncome - dayExpenses);
+        }
+
+        this.charts.weekly.data.labels = days;
+        this.charts.weekly.data.datasets[0].data = profits;
+        this.charts.weekly.update();
     }
 
     renderDashboard() {
@@ -326,6 +394,37 @@ class SoleTraderApp {
         
         const todayNet = todayIncome - todayExpenses;
 
+        // Get yesterday's net for comparison
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        
+        const yesterdayIncome = this.store.data.income
+            .filter(i => i.date === yesterdayStr)
+            .reduce((sum, i) => sum + i.amount, 0);
+        
+        const yesterdayExpenses = this.store.data.expenses
+            .filter(e => e.date === yesterdayStr)
+            .reduce((sum, e) => sum + e.amount, 0);
+        
+        const yesterdayNet = yesterdayIncome - yesterdayExpenses;
+        const change = todayNet - yesterdayNet;
+        
+        // Update today's change indicator
+        const changeEl = document.getElementById('todayChange');
+        if (changeEl) {
+            if (change > 0) {
+                changeEl.textContent = `↑ ${formatCurrency(change)} vs yesterday`;
+                changeEl.style.color = '#10B981';
+            } else if (change < 0) {
+                changeEl.textContent = `↓ ${formatCurrency(Math.abs(change))} vs yesterday`;
+                changeEl.style.color = '#EF4444';
+            } else {
+                changeEl.textContent = 'Same as yesterday';
+                changeEl.style.color = '#6B7280';
+            }
+        }
+
         document.getElementById('dashIncome').textContent = formatCurrency(todayIncome);
         document.getElementById('dashExpenses').textContent = formatCurrency(todayExpenses);
         document.getElementById('dashNet').textContent = formatCurrency(todayNet);
@@ -333,10 +432,33 @@ class SoleTraderApp {
         
         document.getElementById('todayNet').textContent = formatCurrency(todayNet);
         
-        // Calculate tax due
+        // Calculate tax due and weekly savings needed
         const yearlyProfit = this.calculateYearlyProfit();
-        const taxDue = this.calculateTotalTax(yearlyProfit);
+        const mileageDeduction = this.calculateMileageAllowance();
+        const adjustedProfit = yearlyProfit - mileageDeduction;
+        const taxDue = this.calculateTotalTax(adjustedProfit);
+        
         document.getElementById('taxDue').textContent = formatCurrency(taxDue);
+        
+        // Weekly tax saving target (52 weeks)
+        const weeklyTaxSave = Math.round(taxDue / 52);
+        const weeklyEl = document.getElementById('weeklyTaxSave');
+        if (weeklyEl) {
+            weeklyEl.textContent = weeklyTaxSave;
+        }
+
+        // Personal allowance progress
+        const settings = this.store.data.settings;
+        const allowanceUsed = Math.min(yearlyProfit, settings.personalAllowance);
+        const allowancePercent = Math.min(100, (yearlyProfit / settings.personalAllowance) * 100);
+        
+        const percentEl = document.getElementById('allowancePercent');
+        const progressEl = document.getElementById('allowanceProgress');
+        
+        if (percentEl && progressEl) {
+            percentEl.textContent = `${Math.round(allowancePercent)}%`;
+            progressEl.style.width = `${allowancePercent}%`;
+        }
     }
 
     renderPeriodStats() {
@@ -377,6 +499,43 @@ class SoleTraderApp {
         document.getElementById('avgMPG').textContent = avgMPG > 0 ? avgMPG.toFixed(1) : '-';
         document.getElementById('costPerMile').textContent = formatCurrency(costPerMile);
         document.getElementById('futureCosts').textContent = formatCurrency(futureCosts);
+
+        // Mileage allowance calculation
+        const yearStart = new Date(new Date().getFullYear(), 0, 1);
+        const now = new Date();
+        const yearMiles = filterByDateRange(this.store.data.mileage, yearStart, now)
+            .reduce((sum, m) => sum + m.miles, 0);
+        
+        const mileageAllowance = this.calculateMileageAllowance();
+        
+        const yearFuelCost = this.store.data.expenses
+            .filter(e => e.category === 'fuel' && new Date(e.date).getFullYear() === new Date().getFullYear())
+            .reduce((sum, e) => sum + e.amount, 0);
+        
+        const yearMilesEl = document.getElementById('yearMiles');
+        const mileageAllowanceEl = document.getElementById('mileageAllowance');
+        const actualFuelEl = document.getElementById('actualFuelCost');
+        const bestClaimEl = document.getElementById('bestClaim');
+        const mileageTaxSavingEl = document.getElementById('mileageTaxSaving');
+        
+        if (yearMilesEl) yearMilesEl.textContent = Math.round(yearMiles);
+        if (mileageAllowanceEl) mileageAllowanceEl.textContent = formatCurrency(mileageAllowance);
+        if (actualFuelEl) actualFuelEl.textContent = formatCurrency(yearFuelCost);
+        
+        if (bestClaimEl) {
+            if (mileageAllowance > yearFuelCost) {
+                bestClaimEl.textContent = '✅ Mileage Allowance';
+                bestClaimEl.style.color = '#10B981';
+            } else {
+                bestClaimEl.textContent = '✅ Actual Fuel';
+                bestClaimEl.style.color = '#10B981';
+            }
+        }
+        
+        if (mileageTaxSavingEl) {
+            const taxSaving = Math.max(mileageAllowance, yearFuelCost);
+            mileageTaxSavingEl.textContent = formatCurrency(taxSaving);
+        }
 
         // Render list
         const list = document.getElementById('mileageList');
@@ -499,6 +658,24 @@ class SoleTraderApp {
         return yearIncome - yearExpenses;
     }
 
+    calculateMileageAllowance() {
+        const yearStart = new Date(new Date().getFullYear(), 0, 1);
+        const now = new Date();
+        
+        const yearMiles = filterByDateRange(this.store.data.mileage, yearStart, now)
+            .reduce((sum, m) => sum + m.miles, 0);
+        
+        // HMRC rates: 45p for first 10,000 miles, 25p thereafter
+        let allowance = 0;
+        if (yearMiles <= 10000) {
+            allowance = yearMiles * 0.45;
+        } else {
+            allowance = (10000 * 0.45) + ((yearMiles - 10000) * 0.25);
+        }
+        
+        return allowance;
+    }
+
     calculateTotalTax(profit) {
         const settings = this.store.data.settings;
         const taxableIncome = Math.max(0, profit - settings.personalAllowance);
@@ -512,6 +689,8 @@ class SoleTraderApp {
 
     renderTaxCalculator() {
         const yearlyProfit = this.calculateYearlyProfit();
+        const mileageDeduction = this.calculateMileageAllowance();
+        const adjustedProfit = yearlyProfit - mileageDeduction;
         const settings = this.store.data.settings;
         
         const yearIncome = this.store.data.income
@@ -522,17 +701,17 @@ class SoleTraderApp {
             .filter(e => new Date(e.date).getFullYear() === new Date().getFullYear())
             .reduce((sum, e) => sum + e.amount, 0);
         
-        const taxableIncome = Math.max(0, yearlyProfit - settings.personalAllowance);
+        const taxableIncome = Math.max(0, adjustedProfit - settings.personalAllowance);
         const incomeTax = taxableIncome * settings.incomeTaxRate;
         
-        const niableIncome = Math.max(0, yearlyProfit - settings.niThreshold);
+        const niableIncome = Math.max(0, adjustedProfit - settings.niThreshold);
         const ni = niableIncome * settings.niRate;
         
         const totalTax = incomeTax + ni;
 
         document.getElementById('taxGrossIncome').textContent = formatCurrency(yearIncome);
-        document.getElementById('taxExpenses').textContent = formatCurrency(yearExpenses);
-        document.getElementById('taxableProfit').textContent = formatCurrency(yearlyProfit);
+        document.getElementById('taxExpenses').textContent = formatCurrency(yearExpenses + mileageDeduction);
+        document.getElementById('taxableProfit').textContent = formatCurrency(adjustedProfit);
         document.getElementById('personalAllowance').textContent = formatCurrency(settings.personalAllowance);
         document.getElementById('incomeTax').textContent = formatCurrency(incomeTax);
         document.getElementById('nationalInsurance').textContent = formatCurrency(ni);
@@ -554,7 +733,7 @@ class SoleTraderApp {
 
         document.getElementById('annualIncome').textContent = formatCurrency(yearIncome);
         document.getElementById('annualExpenses').textContent = formatCurrency(yearExpenses);
-        document.getElementById('annualProfit').textContent = formatCurrency(yearlyProfit);
+        document.getElementById('annualProfit').textContent = formatCurrency(adjustedProfit);
         document.getElementById('annualMiles').textContent = Math.round(yearMiles);
     }
 
