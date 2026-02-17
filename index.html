@@ -8,19 +8,32 @@
     <title>Sole Trader Tax Tracker</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div id="app">
         <header class="app-header">
             <h1>💼 Sole Trader Tax Tracker</h1>
+            <div class="header-subtitle">Professional tax tracking for UK sole traders</div>
             <div class="header-stats">
                 <div class="stat-badge">
                     <span class="stat-label">Today's Net</span>
                     <span class="stat-value" id="todayNet">£0.00</span>
+                    <span class="stat-change" id="todayChange"></span>
                 </div>
                 <div class="stat-badge">
-                    <span class="stat-label">Tax Due</span>
+                    <span class="stat-label">Year Tax Due</span>
                     <span class="stat-value tax" id="taxDue">£0.00</span>
+                    <span class="stat-hint">Save £<span id="weeklyTaxSave">0</span>/week</span>
+                </div>
+            </div>
+            <div class="tax-allowance-bar">
+                <div class="allowance-label">
+                    <span>Personal Allowance Used</span>
+                    <span id="allowancePercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="allowanceProgress" style="width: 0%"></div>
                 </div>
             </div>
         </header>
@@ -36,6 +49,10 @@
         <main class="content">
             <!-- Dashboard Tab -->
             <section id="dashboard" class="tab-content active">
+                <div class="alert info">
+                    <strong>📌 Note:</strong> This tool provides estimates only. Always consult an accountant for official tax advice.
+                </div>
+
                 <div class="card">
                     <h2>📊 Today's Summary</h2>
                     <div class="summary-grid">
@@ -56,6 +73,11 @@
                             <span class="value" id="dashMiles">0</span>
                         </div>
                     </div>
+                </div>
+
+                <div class="card">
+                    <h2>📈 Weekly Trend</h2>
+                    <canvas id="weeklyChart" height="80"></canvas>
                 </div>
 
                 <div class="card">
@@ -132,14 +154,44 @@
                             <span class="label">Average MPG</span>
                             <span class="value" id="avgMPG">-</span>
                         </div>
-                        <div class="summary-item">
-                            <span class="label">Cost Per Mile</span>
+                        <div class="summary-item tooltip-container">
+                            <span class="label">Cost Per Mile 👁️</span>
                             <span class="value" id="costPerMile">£0.00</span>
+                            <span class="tooltip">Calculated from total fuel costs ÷ total miles</span>
+                        </div>
+                        <div class="summary-item tooltip-container">
+                            <span class="label">Future Costs Est. 👁️</span>
+                            <span class="value" id="futureCosts">£0.00</span>
+                            <span class="tooltip">Estimated maintenance costs based on £1,500 per 30k miles (tyres, brakes, suspension)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>💷 HMRC Mileage Allowance</h2>
+                    <div class="alert info">
+                        <strong>45p per mile</strong> for first 10,000 miles, then <strong>25p per mile</strong>
+                    </div>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">This Year's Miles</span>
+                            <span class="value" id="yearMiles">0</span>
                         </div>
                         <div class="summary-item">
-                            <span class="label">Future Costs Est.</span>
-                            <span class="value" id="futureCosts">£0.00</span>
+                            <span class="label">Mileage Allowance</span>
+                            <span class="value income" id="mileageAllowance">£0.00</span>
                         </div>
+                        <div class="summary-item">
+                            <span class="label">Actual Fuel Spent</span>
+                            <span class="value expense" id="actualFuelCost">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Best Claim Method</span>
+                            <span class="value" id="bestClaim">-</span>
+                        </div>
+                    </div>
+                    <div class="tax-saving-note">
+                        📊 Tax Reduction: <strong id="mileageTaxSaving">£0.00</strong>
                     </div>
                 </div>
 
@@ -251,6 +303,9 @@
             <section id="reports" class="tab-content">
                 <div class="card">
                     <h2>📈 Tax Calculator</h2>
+                    <div class="alert info">
+                        <strong>⚠️ Disclaimer:</strong> Tax calculations are estimates based on 2025/26 rates. Consult a qualified accountant for official tax advice.
+                    </div>
                     <div class="form-group">
                         <label for="taxYear">Tax Year</label>
                         <select id="taxYear">
