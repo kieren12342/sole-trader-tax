@@ -2,7 +2,568 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tax and expense tracker for sole traders">
+    <meta name="theme-color" content="#4F46E5">
+    <title>Sole Trader Tax Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <h1>💼 Sole Trader Tax Tracker</h1>
+            <div class="header-subtitle">Professional tax tracking for UK sole traders</div>
+            <div class="header-stats">
+                <div class="stat-badge">
+                    <span class="stat-label">Today's Net</span>
+                    <span class="stat-value" id="todayNet">£0.00</span>
+                    <span class="stat-change" id="todayChange"></span>
+                </div>
+                <div class="stat-badge">
+                    <span class="stat-label">Year Tax Due</span>
+                    <span class="stat-value tax" id="taxDue">£0.00</span>
+                    <span class="stat-hint">Save £<span id="weeklyTaxSave">0</span>/week</span>
+                </div>
+            </div>
+            <div class="tax-allowance-bar">
+                <div class="allowance-label">
+                    <span>Personal Allowance Used</span>
+                    <span id="allowancePercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="allowanceProgress" style="width: 0%"></div>
+                </div>
+            </div>
+        </header>
+
+        <nav class="tab-navigation">
+            <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-btn" data-tab="dailylog">📝 Daily Log</button>
+            <button class="tab-btn" data-tab="mileage">Mileage</button>
+            <button class="tab-btn" data-tab="expenses">Expenses</button>
+            <button class="tab-btn" data-tab="income">Income</button>
+            <button class="tab-btn" data-tab="reports">Reports</button>
+        </nav>
+
+        <main class="content">
+            <!-- Dashboard Tab -->
+            <section id="dashboard" class="tab-content active">
+                <div class="alert info">
+                    <strong>📌 Note:</strong> This tool provides estimates only. Always consult an accountant for official tax advice.
+                </div>
+
+                <div class="card">
+                    <h2>📊 Today's Summary</h2>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">Income</span>
+                            <span class="value income" id="dashIncome">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Expenses</span>
+                            <span class="value expense" id="dashExpenses">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Net Profit</span>
+                            <span class="value" id="dashNet">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Miles</span>
+                            <span class="value" id="dashMiles">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📈 Weekly Trend</h2>
+                    <canvas id="weeklyChart" height="80"></canvas>
+                </div>
+
+                <div class="card">
+                    <h2>📅 Period Overview</h2>
+                    <div class="period-tabs">
+                        <button class="period-btn active" data-period="week">Week</button>
+                        <button class="period-btn" data-period="month">Month</button>
+                        <button class="period-btn" data-period="year">Year</button>
+                    </div>
+                    <div id="periodStats" class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">Total Income</span>
+                            <span class="value income" id="periodIncome">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Total Expenses</span>
+                            <span class="value expense" id="periodExpenses">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Net Profit</span>
+                            <span class="value" id="periodNet">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Tax Liability</span>
+                            <span class="value tax" id="periodTax">£0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Daily Log Tab -->
+            <section id="dailylog" class="tab-content">
+                <div class="alert info">
+                    <strong>📝 Daily Log:</strong> Add all your income, expenses, and mileage for a specific date in one place.
+                </div>
+
+                <div class="card">
+                    <h2>Select Date</h2>
+                    <div class="form-group">
+                        <label for="dailyLogDate">Date</label>
+                        <input type="date" id="dailyLogDate" required>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>💵 Income Entries</h2>
+                    <div id="dailyIncomeEntries" class="daily-entries"></div>
+                    <form id="dailyIncomeForm" class="inline-form">
+                        <input type="number" id="dailyIncomeAmount" placeholder="Amount" step="0.01" required>
+                        <input type="text" id="dailyIncomeDesc" placeholder="Description" required>
+                        <button type="submit" class="btn-primary">+ Add Income</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>💰 Expense Entries</h2>
+                    <div id="dailyExpenseEntries" class="daily-entries"></div>
+                    <form id="dailyExpenseForm" class="inline-form">
+                        <select id="dailyExpenseCategory" required>
+                            <option value="">Category...</option>
+                            <option value="fuel">⛽ Fuel</option>
+                            <option value="food">🍔 Food</option>
+                            <option value="vehicle_maintenance">🔧 Vehicle Maintenance</option>
+                            <option value="tools">🛠️ Tools</option>
+                            <option value="clothes">👔 Work Clothes</option>
+                            <option value="insurance">🛡️ Insurance</option>
+                            <option value="phone">📱 Phone/Internet</option>
+                            <option value="office">🏢 Office Supplies</option>
+                            <option value="other">📦 Other</option>
+                        </select>
+                        <input type="number" id="dailyExpenseAmount" placeholder="Amount" step="0.01" required>
+                        <input type="text" id="dailyExpenseDesc" placeholder="Description" required>
+                        <button type="submit" class="btn-primary">+ Add Expense</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>🚗 Mileage Entry</h2>
+                    <div id="dailyMileageEntry" class="daily-entries"></div>
+                    <form id="dailyMileageForm" class="inline-form mileage-form">
+                        <div class="form-row">
+                            <input type="number" id="dailyStartOdo" placeholder="Start Odo" step="0.1" required>
+                            <input type="number" id="dailyEndOdo" placeholder="End Odo" step="0.1" required>
+                            <input type="number" id="dailyFuel" placeholder="Litres (optional)" step="0.01">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" id="dailyFullTank">
+                                Full tank
+                            </label>
+                        </div>
+                        <div class="calc-preview">
+                            <span>Miles: <strong id="dailyMilesCalc">0</strong></span>
+                            <span>MPG: <strong id="dailyMPGCalc">-</strong></span>
+                        </div>
+                        <button type="submit" class="btn-primary">Add Mileage</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>📋 Summary for <span id="dailyLogDateDisplay">Today</span></h2>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">Total Income</span>
+                            <span class="value income" id="dailyTotalIncome">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Total Expenses</span>
+                            <span class="value expense" id="dailyTotalExpenses">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Net Profit</span>
+                            <span class="value" id="dailyNetProfit">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Miles Driven</span>
+                            <span class="value" id="dailyTotalMiles">0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mileage Tab -->
+            <section id="mileage" class="tab-content">
+                <div class="card">
+                    <div class="card-header-row">
+                        <h2>🚗 Mileage Tracking</h2>
+                        <div class="view-toggle">
+                            <button class="toggle-btn active" data-view="cards">Cards</button>
+                            <button class="toggle-btn" data-view="table">Table</button>
+                        </div>
+                    </div>
+                    
+                    <div class="filters-row">
+                        <input type="date" id="mileageFilterStart" placeholder="Start date">
+                        <input type="date" id="mileageFilterEnd" placeholder="End date">
+                        <select id="mileageFilterYear">
+                            <option value="">All Years</option>
+                            <option value="2026">2025/26 Tax Year</option>
+                            <option value="2025">2024/25 Tax Year</option>
+                        </select>
+                        <input type="text" id="mileageSearch" placeholder="Search...">
+                        <button class="btn-secondary" id="mileageClearFilters">Clear</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>🚗 Odometer Tracking</h2>
+                    <form id="mileageForm" class="form">
+                        <div class="form-group">
+                            <label for="startOdometer">Start Odometer</label>
+                            <input type="number" id="startOdometer" step="0.1" placeholder="0.0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="endOdometer">End Odometer</label>
+                            <input type="number" id="endOdometer" step="0.1" placeholder="0.0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fuelAdded">Fuel Added (Litres)</label>
+                            <input type="number" id="fuelAdded" step="0.01" placeholder="0.0">
+                        </div>
+                        <div class="form-group">
+                            <label for="mileageDate">Date</label>
+                            <input type="date" id="mileageDate" required>
+                        </div>
+                        <div class="calculated-stats">
+                            <div class="calc-item">
+                                <span class="label">Miles Driven</span>
+                                <span class="value" id="calcMiles">0.0</span>
+                            </div>
+                            <div class="calc-item">
+                                <span class="label">MPG</span>
+                                <span class="value" id="calcMPG">-</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary">Add Mileage Entry</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>📈 Mileage Summary</h2>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">Total Miles (All Time)</span>
+                            <span class="value" id="totalMiles">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Average MPG</span>
+                            <span class="value" id="avgMPG">-</span>
+                        </div>
+                        <div class="summary-item tooltip-container">
+                            <span class="label">Cost Per Mile 👁️</span>
+                            <span class="value" id="costPerMile">£0.00</span>
+                            <span class="tooltip">Calculated from total fuel costs ÷ total miles</span>
+                        </div>
+                        <div class="summary-item tooltip-container">
+                            <span class="label">Future Costs Est. 👁️</span>
+                            <span class="value" id="futureCosts">£0.00</span>
+                            <span class="tooltip">Estimated maintenance costs based on £1,500 per 30k miles (tyres, brakes, suspension)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>💷 HMRC Mileage Allowance</h2>
+                    <div class="alert info">
+                        <strong>45p per mile</strong> for first 10,000 miles, then <strong>25p per mile</strong>
+                    </div>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">This Year's Miles</span>
+                            <span class="value" id="yearMiles">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Mileage Allowance</span>
+                            <span class="value income" id="mileageAllowance">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Actual Fuel Spent</span>
+                            <span class="value expense" id="actualFuelCost">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Best Claim Method</span>
+                            <span class="value" id="bestClaim">-</span>
+                        </div>
+                    </div>
+                    <div class="tax-saving-note">
+                        📊 Tax Reduction: <strong id="mileageTaxSaving">£0.00</strong>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📋 Recent Entries</h2>
+                    <div id="mileageList" class="entry-list"></div>
+                    <div id="mileageTable" class="data-table" style="display: none;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="sortable" data-sort="date">Date</th>
+                                    <th class="sortable" data-sort="start">Start Odo</th>
+                                    <th class="sortable" data-sort="end">End Odo</th>
+                                    <th class="sortable" data-sort="miles">Miles</th>
+                                    <th class="sortable" data-sort="litres">Litres</th>
+                                    <th class="sortable" data-sort="mpg">MPG</th>
+                                    <th>Full Tank</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mileageTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Expenses Tab -->
+            <section id="expenses" class="tab-content">
+                <div class="card">
+                    <h2>💰 Add Expense</h2>
+                    <form id="expenseForm" class="form">
+                        <div class="form-group">
+                            <label for="expenseCategory">Category</label>
+                            <select id="expenseCategory" required>
+                                <option value="">Select category...</option>
+                                <option value="fuel">⛽ Fuel</option>
+                                <option value="food">🍔 Food</option>
+                                <option value="vehicle_maintenance">🔧 Vehicle Maintenance</option>
+                                <option value="tools">🛠️ Tools</option>
+                                <option value="clothes">👔 Work Clothes</option>
+                                <option value="insurance">🛡️ Insurance</option>
+                                <option value="phone">📱 Phone/Internet</option>
+                                <option value="office">🏢 Office Supplies</option>
+                                <option value="other">📦 Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="expenseAmount">Amount (£)</label>
+                            <input type="number" id="expenseAmount" step="0.01" placeholder="0.00" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="expenseDescription">Description</label>
+                            <input type="text" id="expenseDescription" placeholder="Brief description" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="expenseDate">Date</label>
+                            <input type="date" id="expenseDate" required>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <label>
+                                <input type="checkbox" id="expenseRecurring">
+                                Recurring expense
+                            </label>
+                        </div>
+                        <button type="submit" class="btn-primary">Add Expense</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>📊 Expense Breakdown</h2>
+                    <div id="expenseBreakdown" class="breakdown-list"></div>
+                </div>
+
+                <div class="card">
+                    <h2>📋 Recent Expenses</h2>
+                    <div id="expenseList" class="entry-list"></div>
+                </div>
+            </section>
+
+            <!-- Income Tab -->
+            <section id="income" class="tab-content">
+                <div class="card">
+                    <h2>💵 Add Income</h2>
+                    <form id="incomeForm" class="form">
+                        <div class="form-group">
+                            <label for="incomeAmount">Amount (£)</label>
+                            <input type="number" id="incomeAmount" step="0.01" placeholder="0.00" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="incomeDescription">Description</label>
+                            <input type="text" id="incomeDescription" placeholder="Job/client description" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="incomeDate">Date</label>
+                            <input type="date" id="incomeDate" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Add Income</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>💷 Net Daily Wage Calculator</h2>
+                    <div class="wage-calculator">
+                        <div class="calc-row">
+                            <span class="label">Today's Income:</span>
+                            <span class="value income" id="todayIncome">£0.00</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="label">Today's Expenses:</span>
+                            <span class="value expense" id="todayExpenses">£0.00</span>
+                        </div>
+                        <div class="calc-row total">
+                            <span class="label">Net Daily Wage:</span>
+                            <span class="value" id="netDailyWage">£0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📋 Recent Income</h2>
+                    <div id="incomeList" class="entry-list"></div>
+                </div>
+            </section>
+
+            <!-- Reports Tab -->
+            <section id="reports" class="tab-content">
+                <div class="card">
+                    <h2>📈 Tax Calculator</h2>
+                    <div class="alert info">
+                        <strong>⚠️ Disclaimer:</strong> Tax calculations are estimates based on 2025/26 rates. Consult a qualified accountant for official tax advice.
+                    </div>
+                    <div class="form-group">
+                        <label for="taxYear">Tax Year</label>
+                        <select id="taxYear">
+                            <option value="2025">2025/2026</option>
+                            <option value="2024">2024/2025</option>
+                        </select>
+                    </div>
+                    
+                    <div class="tax-breakdown">
+                        <h3>Income & Profit</h3>
+                        <div class="calc-row">
+                            <span class="label">Gross Income:</span>
+                            <span class="value" id="taxGrossIncome">£0.00</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="label">Business Expenses:</span>
+                            <span class="value" id="taxExpenses">£0.00</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="label">Taxable Profit:</span>
+                            <span class="value" id="taxableProfit">£0.00</span>
+                        </div>
+
+                        <h3>Tax Breakdown</h3>
+                        <div class="calc-row">
+                            <span class="label">Personal Allowance:</span>
+                            <span class="value" id="personalAllowance">£12,570</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="label">Income Tax (20%):</span>
+                            <span class="value tax" id="incomeTax">£0.00</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="label">National Insurance:</span>
+                            <span class="value tax" id="nationalInsurance">£0.00</span>
+                        </div>
+                        <div class="calc-row total">
+                            <span class="label">Total Tax Due:</span>
+                            <span class="value tax" id="totalTaxDue">£0.00</span>
+                        </div>
+
+                        <h3>Time-based Tax Estimates</h3>
+                        <div class="calc-row">
+                            <span class="label">Daily Tax:</span>
+                            <span class="value" id="dailyTax">£0.00</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="label">Weekly Tax:</span>
+                            <span class="value" id="weeklyTax">£0.00</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="label">Monthly Tax:</span>
+                            <span class="value" id="monthlyTax">£0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📊 Annual Summary</h2>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">Annual Income</span>
+                            <span class="value income" id="annualIncome">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Annual Expenses</span>
+                            <span class="value expense" id="annualExpenses">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Net Profit</span>
+                            <span class="value" id="annualProfit">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Total Miles</span>
+                            <span class="value" id="annualMiles">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>🔄 Data Management</h2>
+                    <div class="button-group">
+                        <button id="exportData" class="btn-secondary">Export Data</button>
+                        <button id="importData" class="btn-secondary">Import Data</button>
+                        <button id="clearData" class="btn-danger">Clear All Data</button>
+                    </div>
+                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Edit Entry</h2>
+                <button class="modal-close" onclick="app.closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Dynamic form content will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="app.closeEditModal()">Cancel</button>
+                <button class="btn-primary" onclick="app.saveEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
+
     <title>Icon Generator - Sole Trader Tax Tracker</title>
     <style>
         body {
@@ -125,3 +686,4 @@
     </script>
 </body>
 </html>
+
