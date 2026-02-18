@@ -17,6 +17,688 @@
             <div class="header-subtitle">Professional tax tracking for UK sole traders</div>
             <div class="header-stats">
                 <div class="stat-badge">
+                    <span class="stat-label">YTD Gross Income</span>
+                    <span class="stat-value income" id="ytdGross">£0.00</span>
+                </div>
+                <div class="stat-badge">
+                    <span class="stat-label">YTD Net Profit</span>
+                    <span class="stat-value" id="ytdNet">£0.00</span>
+                </div>
+                <div class="stat-badge">
+                    <span class="stat-label">Year Tax Due</span>
+                    <span class="stat-value tax" id="taxDue">£0.00</span>
+                    <span class="stat-hint">Save £<span id="weeklyTaxSave">0</span>/week</span>
+                </div>
+            </div>
+            <div class="tax-allowance-bar">
+                <div class="allowance-label">
+                    <span>Personal Allowance Used</span>
+                    <span id="allowancePercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="allowanceProgress" style="width: 0%"></div>
+                </div>
+            </div>
+        </header>
+
+        <nav class="tab-navigation">
+            <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-btn" data-tab="dailylog">📝 Daily Log</button>
+            <button class="tab-btn" data-tab="mileage">Mileage</button>
+            <button class="tab-btn" data-tab="expenses">Expenses</button>
+            <button class="tab-btn" data-tab="income">Income</button>
+            <button class="tab-btn" data-tab="reports">Reports</button>
+            <button class="tab-btn" data-tab="info">📚 Info</button>
+        </nav>
+
+        <main class="content">
+            <!-- Dashboard Tab -->
+            <section id="dashboard" class="tab-content active">
+                <div class="card">
+                    <h2>📊 Today's Summary</h2>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">Income</span>
+                            <span class="value income" id="dashIncome">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Expenses</span>
+                            <span class="value expense" id="dashExpenses">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Net Profit</span>
+                            <span class="value" id="dashNet">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Miles</span>
+                            <span class="value" id="dashMiles">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header-row">
+                        <h2>📈 Profit Trend</h2>
+                        <div class="view-toggle">
+                            <button class="toggle-btn active" data-trend="week">Week</button>
+                            <button class="toggle-btn" data-trend="month">Month</button>
+                            <button class="toggle-btn" data-trend="year">Year</button>
+                        </div>
+                    </div>
+                    <canvas id="weeklyChart" height="80"></canvas>
+                </div>
+
+                <div class="card">
+                    <h2>📅 Period Overview</h2>
+                    <div class="period-tabs">
+                        <button class="period-btn" data-period="day">Day</button>
+                        <button class="period-btn active" data-period="week">Week</button>
+                        <button class="period-btn" data-period="month">Month</button>
+                        <button class="period-btn" data-period="year">Year</button>
+                        <button class="period-btn" data-period="custom">Custom Range</button>
+                    </div>
+                    <div id="customDateRange" style="text-align: center; margin: 0.5rem 0; display: none;">
+                        <label style="font-size: 0.875rem; margin-right: 0.5rem;">From:</label>
+                        <input type="date" id="customStartDate" style="padding: 0.5rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; font-size: 0.875rem; margin-right: 1rem;">
+                        <label style="font-size: 0.875rem; margin-right: 0.5rem;">To:</label>
+                        <input type="date" id="customEndDate" style="padding: 0.5rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; font-size: 0.875rem; margin-right: 0.5rem;">
+                        <button class="btn-primary" id="applyCustomRange" style="padding: 0.5rem 1rem;">Apply</button>
+                    </div>
+                    <div id="periodDateRange" style="text-align: center; color: #6B7280; font-size: 0.875rem; margin: 0.5rem 0; font-weight: 500;"></div>
+                    <div id="periodFilters" style="text-align: center; margin: 0.5rem 0; display: none;">
+                        <select id="dayFilter" style="padding: 0.5rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; font-size: 0.875rem; display: none;"></select>
+                        <select id="weekFilter" style="padding: 0.5rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; font-size: 0.875rem; display: none;"></select>
+                        <select id="monthFilter" style="padding: 0.5rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; font-size: 0.875rem; display: none;"></select>
+                    </div>
+                    <div id="periodStats" class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">Total Income</span>
+                            <span class="value income" id="periodIncome">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Total Expenses</span>
+                            <span class="value expense" id="periodExpenses">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Net Profit</span>
+                            <span class="value" id="periodNet">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Tax Liability</span>
+                            <span class="value tax" id="periodTax">£0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Daily Log Tab -->
+            <section id="dailylog" class="tab-content">
+                <div class="alert info">
+                    <strong>📝 Daily Log:</strong> Add all your income, expenses, and mileage for a specific date in one place.
+                </div>
+
+                <div class="card">
+                    <h2>Select Date</h2>
+                    <div class="form-group">
+                        <label for="dailyLogDate">Date</label>
+                        <input type="date" id="dailyLogDate" required>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>💵 Income Entries</h2>
+                    <div id="dailyIncomeEntries" class="daily-entries"></div>
+                    <form id="dailyIncomeForm" class="inline-form">
+                        <input type="number" id="dailyIncomeAmount" placeholder="Amount" step="0.01" required>
+                        <input type="text" id="dailyIncomeDesc" placeholder="Description" required>
+                        <button type="submit" class="btn-primary">+ Add Income</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>💰 Expense Entries</h2>
+                    <div id="dailyExpenseEntries" class="daily-entries"></div>
+                    <form id="dailyExpenseForm" class="inline-form">
+                        <select id="dailyExpenseCategory" required>
+                            <option value="">Category...</option>
+                            <option value="fuel">⛽ Fuel</option>
+                            <option value="food">🍔 Food</option>
+                            <option value="vehicle_maintenance">🔧 Vehicle Maintenance</option>
+                            <option value="tools">🛠️ Tools</option>
+                            <option value="clothes">👔 Work Clothes</option>
+                            <option value="insurance">🛡️ Insurance</option>
+                            <option value="phone">📱 Phone/Internet</option>
+                            <option value="office">🏢 Office Supplies</option>
+                            <option value="other">📦 Other</option>
+                        </select>
+                        <input type="number" id="dailyExpenseAmount" placeholder="Amount" step="0.01" required>
+                        <input type="text" id="dailyExpenseDesc" placeholder="Description" required>
+                        <button type="submit" class="btn-primary">+ Add Expense</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>🚗 Mileage Entry</h2>
+                    <div id="dailyMileageEntry" class="daily-entries"></div>
+                    <form id="dailyMileageForm" class="inline-form mileage-form">
+                        <div class="form-row">
+                            <input type="number" id="dailyStartOdo" placeholder="Start Odo" step="0.1" required>
+                            <input type="number" id="dailyEndOdo" placeholder="End Odo" step="0.1" required>
+                            <input type="number" id="dailyFuel" placeholder="Litres used" step="0.01">
+                        </div>
+                        <div class="calc-preview">
+                            <span>Miles: <strong id="dailyMilesCalc">0</strong></span>
+                            <span>MPG: <strong id="dailyMPGCalc">-</strong></span>
+                        </div>
+                        <button type="submit" class="btn-primary">Add Mileage</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>📋 Summary for <span id="dailyLogDateDisplay">Today</span></h2>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">Total Income</span>
+                            <span class="value income" id="dailyTotalIncome">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Total Expenses</span>
+                            <span class="value expense" id="dailyTotalExpenses">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Net Profit</span>
+                            <span class="value" id="dailyNetProfit">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Miles Driven</span>
+                            <span class="value" id="dailyTotalMiles">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TRIAL: Daily Overview Table - Remove if not useful -->
+                <div class="card" id="dailyOverviewTableCard">
+                    <div class="card-header-row">
+                        <h2>📊 Daily Overview (Spreadsheet View)</h2>
+                        <button class="btn-secondary" id="toggleDailyOverview">Hide This View</button>
+                    </div>
+                    <p style="font-size: 0.875rem; color: #6B7280; margin-bottom: 1rem;">Trial feature: Shows all your data in a spreadsheet-like format.</p>
+                    <div id="dailyOverviewTable" class="data-table" style="overflow-x: auto;"></div>
+                </div>
+            </section>
+
+            <!-- Mileage Tab -->
+            <section id="mileage" class="tab-content">
+                <div class="alert info">
+                    <strong>📌 Add mileage</strong> using the <strong>Daily Log</strong> tab for a streamlined workflow.
+                </div>
+
+                <div class="card">
+                    <h2>💷 HMRC Mileage Allowance</h2>
+                    <div class="alert info">
+                        <strong>45p per mile</strong> for first 10,000 miles, then <strong>25p per mile</strong>
+                    </div>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">This Year's Miles</span>
+                            <span class="value" id="yearMiles">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Mileage Allowance</span>
+                            <span class="value income" id="mileageAllowance">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Actual Fuel Spent</span>
+                            <span class="value expense" id="actualFuelCost">£0.00</span>
+                        </div>
+                        <div class="summary-item tooltip-container">
+                            <span class="label">Recommendation 👁️</span>
+                            <span class="value" id="bestClaim">-</span>
+                            <span class="tooltip">Estimate only. "Actual costs" method requires tracking ALL vehicle expenses + business-use %. Consult an accountant for your situation.</span>
+                        </div>
+                    </div>
+                    <div class="tax-saving-note">
+                        📊 Tax Reduction: <strong id="mileageTaxSaving">£0.00</strong>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📋 Recent Entries</h2>
+                    <div id="mileageList" class="entry-list"></div>
+                    <div id="mileageTable" class="data-table" style="display: none;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="sortable" data-sort="date">Date</th>
+                                    <th class="sortable" data-sort="start">Start Odo</th>
+                                    <th class="sortable" data-sort="end">End Odo</th>
+                                    <th class="sortable" data-sort="miles">Miles</th>
+                                    <th class="sortable" data-sort="litres">Litres</th>
+                                    <th class="sortable" data-sort="mpg">MPG</th>
+                                    <th>Full Tank</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mileageTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Expenses Tab -->
+            <section id="expenses" class="tab-content">
+                <div class="alert info">
+                    <strong>📌 Add expenses</strong> using the <strong>Daily Log</strong> tab for a streamlined workflow.
+                </div>
+
+                <div class="card">
+                    <h2>📊 Expenses by Category</h2>
+                    <div class="summary-grid" style="margin-bottom: 1.5rem;">
+                        <div class="summary-item">
+                            <span class="label">Total Year Expenses</span>
+                            <span class="value expense" id="totalExpenses">£0.00</span>
+                        </div>
+                    </div>
+                    <div id="expenseBreakdown" class="breakdown-list"></div>
+                </div>
+
+                <div class="card">
+                    <h2>📋 All Expenses</h2>
+                    <div id="expenseList" class="entry-list"></div>
+                </div>
+            </section>
+
+            <!-- Income Tab -->
+            <section id="income" class="tab-content">
+                <div class="alert info">
+                    <strong>📌 Add income</strong> using the <strong>Daily Log</strong> tab for a streamlined workflow.
+                </div>
+
+                <div class="card">
+                    <h2>💷 Net Daily Wage Calculator</h2>
+                    <div class="wage-calculator">
+                        <div class="calc-row">
+                            <span class="label">Today's Income:</span>
+                            <span class="value income" id="todayIncome">£0.00</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="label">Today's Expenses:</span>
+                            <span class="value expense" id="todayExpenses">£0.00</span>
+                        </div>
+                        <div class="calc-row total">
+                            <span class="label">Net Daily Wage:</span>
+                            <span class="value" id="netDailyWage">£0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>� Income by Source</h2>
+                    <div id="incomeBreakdown" class="breakdown-list"></div>
+                </div>
+
+                <div class="card">
+                    <h2>�📋 All Income</h2>
+                    <div id="incomeList" class="entry-list"></div>
+                </div>
+            </section>
+
+            <!-- Reports Tab -->
+            <section id="reports" class="tab-content">
+                <div class="alert info">
+                    <strong>📊 Tax Summary</strong> for UK tax year 2025/26 (April 6, 2025 - April 5, 2026)
+                </div>
+
+                <div class="card">
+                    <h2>� PAYE Income (Optional)</h2>
+                    <p style="font-size: 0.875rem; color: #6B7280; margin-bottom: 1rem;">If you had PAYE employment, enter your P60 details here to calculate combined tax liability and potential rebates.</p>
+                    <div class="form-group">
+                        <label for="payeTaxYear">Tax Year</label>
+                        <select id="payeTaxYear">
+                            <option value="2025">2025/26</option>
+                            <option value="2024">2024/25</option>
+                            <option value="2023">2023/24</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="payeGrossIncome">P60 Gross Income (£)</label>
+                        <input type="number" id="payeGrossIncome" step="0.01" placeholder="Total earnings from P60">
+                    </div>
+                    <div class="form-group">
+                        <label for="payeTaxPaid">P60 Tax Already Paid (£)</label>
+                        <input type="number" id="payeTaxPaid" step="0.01" placeholder="Total tax deducted from P60">
+                    </div>
+                    <div class="form-group">
+                        <label for="payeNIPaid">P60 NI Already Paid (£)</label>
+                        <input type="number" id="payeNIPaid" step="0.01" placeholder="Total NI deducted from P60">
+                    </div>
+                    <button class="btn-primary" id="savePAYE">Save PAYE Details</button>
+                </div>
+
+                <div class="card">
+                    <h2>�💷 Tax Calculator</h2>
+                    <div class="form-group">
+                        <label for="taxYear">Tax Year</label>
+                        <select id="taxYear">
+                            <option value="" selected>Select a tax year...</option>
+                            <option value="2025">2025/26</option>
+                            <option value="2024">2024/25</option>
+                        </select>
+                    </div>
+                    
+                    <div class="tax-breakdown">
+                        <h3>Income & Profit</h3>
+                        <div class="calc-row">
+                            <span class="label">Gross Income:</span>
+                            <span class="value" id="taxGrossIncome">£0.00</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="label">Business Expenses:</span>
+                            <span class="value" id="taxExpenses" title="Hover to see breakdown">£0.00</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #6B7280; margin-left: 1rem; margin-top: -0.25rem;" id="expenseBreakdownNote"></div>
+                        <div class="calc-row">
+                            <span class="label">Taxable Profit:</span>
+                            <span class="value" id="taxableProfit">£0.00</span>
+                        </div>
+
+                        <h3>Tax Breakdown</h3>
+                        <div class="calc-row">
+                            <span class="label">Personal Allowance:</span>
+                            <span class="value" id="personalAllowance">£12,570</span>
+                        </div>
+                        
+                        <!-- PAYE Income Breakdown (if applicable) -->
+                        <div id="payeBreakdown" style="display: none; margin: 1rem 0; padding: 1rem; background: #F3F4F6; border-radius: 8px;">
+                            <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #6B7280;">📊 Combined Income Calculation</h4>
+                            <div class="calc-row" style="font-size: 0.9rem;">
+                                <span>Self-Employment Profit:</span>
+                                <span id="selfEmploymentDisplay">£0.00</span>
+                            </div>
+                            <div class="calc-row" style="font-size: 0.9rem;">
+                                <span>+ PAYE Income (P60):</span>
+                                <span id="payeIncomeDisplay">£0.00</span>
+                            </div>
+                            <div class="calc-row" style="font-weight: 600; font-size: 0.95rem; border-top: 1px solid #D1D5DB; padding-top: 0.5rem; margin-top: 0.5rem;">
+                                <span>= Combined Taxable Income:</span>
+                                <span id="combinedIncomeDisplay">£0.00</span>
+                            </div>
+                            <div class="calc-row" style="font-size: 0.9rem; margin-top: 0.5rem; color: #EF4444;">
+                                <span>- Personal Allowance:</span>
+                                <span id="personalAllowanceInCalc">£12,570.00</span>
+                            </div>
+                            <div class="calc-row" style="font-weight: 700; font-size: 1rem; border-top: 2px solid #4F46E5; padding-top: 0.5rem; margin-top: 0.5rem; color: #4F46E5;">
+                                <span>= Amount Subject to Tax:</span>
+                                <span id="taxableAmount">£0.00</span>
+                            </div>
+                            <div class="calc-row" style="font-size: 0.9rem; margin-top: 0.5rem; color: #7C3AED;">
+                                <span>Tax on this @ 20%:</span>
+                                <span id="calculatedIncomeTax">£0.00</span>
+                            </div>
+                            <div class="calc-row" style="font-size: 0.85rem; color: #6B7280; margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px dashed #D1D5DB;">
+                                <span>Tax Already Paid via PAYE:</span>
+                                <span id="payeTaxPaidDisplay">£0.00</span>
+                            </div>
+                            <div class="calc-row" style="font-size: 0.85rem; color: #6B7280;">
+                                <span>NI Already Paid via PAYE:</span>
+                                <span id="payeNIPaidDisplay">£0.00</span>
+                            </div>
+                        </div>
+                        
+                        <div class="calc-row">
+                            <span class="label">Income Tax (20%):</span>
+                            <span class="value tax" id="incomeTax">£0.00</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="label">NI Class 2 (£3.45/week):</span>
+                            <span class="value tax" id="niClass2">£0.00</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="label">NI Class 4 (9% on profits):</span>
+                            <span class="value tax" id="niClass4">£0.00</span>
+                        </div>
+                        <div class="calc-row total">
+                            <span class="label">Total Tax Due:</span>
+                            <span class="value tax" id="totalTaxDue">£0.00</span>
+                        </div>
+
+                        <h3>Saving Targets</h3>
+                        <div class="calc-row">
+                            <span class="label">Save per Day:</span>
+                            <span class="value" id="dailyTax">£0.00</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="label">Save per Week:</span>
+                            <span class="value" id="weeklyTax">£0.00</span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="label">Save per Month:</span>
+                            <span class="value" id="monthlyTax">£0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>📊 Tax Year Summary (2025/26)</h2>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="label">Annual Income (Combined)</span>
+                            <span class="value income" id="annualIncome">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Annual Expenses</span>
+                            <span class="value expense" id="annualExpenses">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Net Profit (Self-Employed)</span>
+                            <span class="value" id="annualProfit">£0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Total Miles</span>
+                            <span class="value" id="annualMiles">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>� Backup & Export</h2>
+                    <p style="margin-bottom: 1rem; color: var(--text-secondary);">Export your data regularly as a backup. Import to restore from a previous export.</p>
+                    <div class="button-group">
+                        <button id="exportData" class="btn-primary">💾 Export Data (JSON)</button>
+                        <button id="importData" class="btn-secondary">📥 Import Data</button>
+                    </div>
+                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                </div>
+
+                <div class="card">
+                    <h2>⚠️ Danger Zone</h2>
+                    <p style="margin-bottom: 1rem; color: var(--danger); font-weight: 600;">This will permanently delete ALL your data. Export first!</p>
+                    <button id="clearData" class="btn-danger">🗑️ Clear All Data</button>
+                </div>
+            </section>
+
+            <!-- Info Tab -->
+            <section id="info" class="tab-content">
+                <div class="card">
+                    <h2>📚 UK Tax & National Insurance Guide</h2>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="color: #4F46E5; margin-bottom: 0.5rem;">🔵 National Insurance Classes</h3>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Class 1 NI (Employees - PAYE)</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Paid by employees earning over £12,570/year</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Deducted automatically from salary by employer</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Rate: 8% on £12,570 - £50,270, then 2% above</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Qualifies you for State Pension and benefits</p>
+                        </div>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Class 2 NI (Self-Employed - Low Earners)</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• <strong>Below £6,725 profit:</strong> OPTIONAL payment (£3.45/week) to qualify for State Pension</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• <strong>Above £6,725 profit:</strong> Automatically qualify for State Pension - NO Class 2 NI charge</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #10B981;">✓ This app sets Class 2 NI to £0 if you're above the threshold</p>
+                        </div>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Class 3 NI (Voluntary Contributions)</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Optional payments to fill gaps in your NI record</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• £17.45 per week (2025/26)</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Useful if you have incomplete years affecting State Pension</p>
+                        </div>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Class 4 NI (Self-Employed - Profit-Based)</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Paid on self-employment profits above £12,570</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• <strong>9%</strong> on profits between £12,570 - £50,270</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• <strong>2%</strong> on profits above £50,270</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #EF4444;">⚠️ Does NOT count towards State Pension (use Class 2 or 3 for that)</p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="color: #4F46E5; margin-bottom: 0.5rem;">💰 Income Tax Thresholds (2025/26)</h3>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Personal Allowance</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• <strong>£12,570</strong> - Tax-free earnings</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Reduced by £1 for every £2 earned over £100,000</p>
+                        </div>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Basic Rate (20%)</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• <strong>£12,571 - £50,270</strong></p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Most people pay 20% on earnings in this band</p>
+                        </div>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Higher Rate (40%)</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• <strong>£50,271 - £125,140</strong></p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• 40% tax on earnings in this band</p>
+                        </div>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Additional Rate (45%)</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• <strong>£125,141+</strong></p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• 45% tax on earnings above this threshold</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 style="color: #4F46E5; margin-bottom: 0.5rem;">📋 HMRC Allowable Deductions</h3>
+                        <p style="font-size: 0.9rem; color: #6B7280; margin-bottom: 1rem;">You can deduct these business expenses to reduce your taxable profit:</p>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Vehicle & Travel</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• <strong>Mileage Allowance:</strong> 45p/mile (first 10,000), then 25p/mile</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• <strong>OR Actual Costs:</strong> Fuel, insurance, repairs, MOT (business use %)</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #EF4444;">⚠️ You cannot claim both!</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Public transport, parking, tolls</p>
+                        </div>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Office & Equipment</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Office supplies, stationery, postage</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Computer equipment, software, phones</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Tools and equipment for your trade</p>
+                        </div>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Professional Services</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Accountant and bookkeeping fees</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Professional insurance and memberships</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Legal fees (business-related)</p>
+                        </div>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Working from Home</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Simplified: £6/week (25-50 hrs), £18/week (51-100 hrs), £26/week (101+ hrs)</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• OR Actual costs: Portion of rent, utilities, internet (business use %)</p>
+                        </div>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Marketing & Advertising</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Website hosting and domain costs</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Online advertising (Google, Facebook, etc.)</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Business cards, flyers, promotional materials</p>
+                        </div>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Training & Development</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Courses to update existing skills</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Industry-specific qualifications</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #EF4444;">⚠️ Cannot claim for new skills unrelated to current business</p>
+                        </div>
+                        
+                        <div style="background: #F3F4F6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Other Allowable Expenses</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Bank charges and transaction fees</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Phone and internet (business use %)</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Clothing (protective/branded uniforms only)</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #6B7280;">• Stock and raw materials</p>
+                        </div>
+                        
+                        <div style="background: #FEE2E2; padding: 1rem; border-radius: 8px; border-left: 4px solid #EF4444;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #991B1B;">❌ NOT Allowable</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: #991B1B;">• Entertainment costs (client meals, events)</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #991B1B;">• Normal commuting costs (home to regular workplace)</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #991B1B;">• Personal clothing (even if worn for work)</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #991B1B;">• Personal expenses or fines</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Edit Entry</h2>
+                <button class="modal-close" onclick="app.closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Dynamic form content will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="app.closeEditModal()">Cancel</button>
+                <button class="btn-primary" onclick="app.saveEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-content">
+            <p><strong>🔒 Your data is stored locally</strong> on this device only (browser localStorage). No cloud sync.</p>
+            <p><strong>💾 Export regularly</strong> to back up your data. Use Reports tab → Export Data.</p>
+            <p><strong>⚠️ Not tax advice.</strong> This tool provides estimates. Consult a qualified accountant for your tax obligations.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
+
+<body>
+    <div id="app">
+        <header class="app-header">
+            <h1>💼 Sole Trader Tax Tracker</h1>
+            <div class="header-subtitle">Professional tax tracking for UK sole traders</div>
+            <div class="header-stats">
+                <div class="stat-badge">
                     <span class="stat-label">Today's Net</span>
                     <span class="stat-value" id="todayNet">£0.00</span>
                     <span class="stat-change" id="todayChange"></span>
@@ -2279,6 +2961,7 @@ F-8">
     </script>
 </body>
 </html>
+
 
 
 
